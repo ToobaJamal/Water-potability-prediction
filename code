@@ -1,0 +1,76 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+%matplotlib inline
+
+data = pd.read_csv('../input/water-potability/water_potability.csv')
+data.sample(10)
+
+data.shape
+data.describe()
+data.info()
+data.isna().sum()
+data.dropna(inplace=True)
+
+features = data.drop('Potability', axis=1)
+features
+
+plt.figure(figsize=(10, 8))
+sns.barplot(data.Potability, data.ph)
+
+plt.figure(figsize=(16, 12))
+for i in range(len(features.columns)):
+    plt.subplot(3, 3, i+1)
+    sns.distplot(features.iloc[:,i], hist=False, kde=True);
+plt.tight_layout()
+
+plt.figure.figsize=(10, 10)
+sns.boxplot(data=features);
+plt.xticks(rotation=90);
+
+data_corr = data.corr()
+plt.figure(figsize=(12, 10))
+mask = np.triu(np.ones_like(data.corr()))
+sns.heatmap(data_corr, annot=True, cmap='Blues', mask=mask);
+
+plt.figure(figsize=(16, 16))
+sns.pairplot(data)
+
+from sklearn.preprocessing import StandardScaler
+scaler=StandardScaler()
+scaled = scaler.fit_transform(data.drop('Potability', axis=1))
+
+
+from sklearn.model_selection import train_test_split
+X_train, X_test, y_train, y_test = train_test_split(scaled, data['Potability'], test_size = 0.3, random_state=42)
+
+from sklearn.linear_model import LogisticRegression
+lr = LogisticRegression()
+lr.fit(X_train, y_train)
+preds_lr = lr.predict(X_test)
+from sklearn.metrics import accuracy_score, confusion_matrix
+acc_lr = accuracy_score(preds_lr, y_test)
+conf = confusion_matrix(preds_lr, y_test)
+print("Accuracy score of Logistic Regression is:", acc_lr)
+print(conf)
+
+from sklearn.ensemble import RandomForestClassifier
+rf = RandomForestClassifier()
+rf.fit(X_train, y_train)
+preds_rf = rf.predict(X_test)
+
+acc_rf = accuracy_score(preds_rf, y_test)
+conf_rf = confusion_matrix(preds_rf, y_test)
+print("Accuracy score of Random Forest is:", acc_rf)
+print(conf_rf)
+
+from sklearn.tree import DecisionTreeClassifier
+dt = DecisionTreeClassifier()
+dt.fit(X_train, y_train)
+preds_dt = dt.predict(X_test)
+
+acc_dt = accuracy_score(preds_dt, y_test)
+conf_dt = confusion_matrix(preds_dt, y_test)
+print("Accuracy score of Decision Tree is:", acc_dt)
+print(conf_dt)
